@@ -68,7 +68,7 @@ h1{
     display:none;
 }
 
-#taskPage{
+.page.active{
     display:block;
 }
 
@@ -143,7 +143,7 @@ AI学習支援タスク管理システム
 <!-- ========================= -->
 <!-- タスク管理画面 -->
 <!-- ========================= -->
-<div id="taskPage" class="page active">
+<div id="aiPage" class="page">
 
     <h2>📝 タスク管理</h2>
 
@@ -1040,20 +1040,18 @@ function generateShareUrl(){
 
 function copyLink(){
 
-    const url =
-        generateShareUrl();
+    const url = generateShareUrl();
 
     if(!url){
         return;
     }
 
-    navigator
-        .clipboard
-        .writeText(url);
-
-    alert(
-        "リンクをコピーしました！"
-    );
+    if(navigator.clipboard){
+        navigator.clipboard.writeText(url);
+        alert("リンクをコピーしました！");
+    }else{
+        prompt("このリンクをコピーしてください", url);
+    }
 }
 
 // =========================
@@ -1141,14 +1139,9 @@ document
 // =========================
 // 初期処理
 // =========================
-window.onload = () => {
+window.onload = function(){
 
-    document
-        .getElementById(
-            "taskPage"
-        )
-        .style.display =
-        "block";
+    showPage("taskPage");
 
     renderTasks();
     checkImport();
