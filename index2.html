@@ -68,7 +68,7 @@ h1{
     display:none;
 }
 
-.page.active{
+#taskPage{
     display:block;
 }
 
@@ -876,8 +876,6 @@ function updateAI(){
 // =========================
 function drawChart(rate){
 
-    function drawChart(rate){
-
     const canvas =
         document.getElementById(
             "progressChart"
@@ -893,13 +891,6 @@ function drawChart(rate){
     if(!ctx){
         return;
     }
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
 
     ctx.clearRect(
         0,
@@ -928,35 +919,22 @@ function drawChart(rate){
         125,
         90,
         -Math.PI / 2,
-        (
-            rate / 100
-        ) *
-        Math.PI *
-        2 -
-        Math.PI / 2
+        rate / 100 * Math.PI * 2 - Math.PI / 2
     );
 
-    ctx.strokeStyle =
-        "#4f46e5";
-
+    ctx.strokeStyle = "#4f46e5";
     ctx.lineWidth = 15;
     ctx.stroke();
 
-    ctx.fillStyle =
-        "#111827";
-
-    ctx.font =
-        "28px Arial";
-
-    ctx.textAlign =
-        "center";
-
+    ctx.fillStyle = "#111827";
+    ctx.font = "28px Arial";
+    ctx.textAlign = "center";
     ctx.fillText(
         rate + "%",
         125,
         135
     );
-}}
+}
 
 // =========================
 // カレンダー
