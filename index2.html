@@ -363,18 +363,20 @@ function saveTasks(){
 function showPage(page){
 
     document
-    .querySelectorAll(".page")
-    .forEach(p=>{
-        p.classList.remove(
-            "active"
-        );
-    });
+        .querySelectorAll(".page")
+        .forEach(p=>{
+            p.style.display = "none";
+        });
 
-    document
-    .getElementById(page)
-    .classList.add(
-        "active"
-    );
+    const target =
+        document.getElementById(
+            page
+        );
+
+    if(target){
+        target.style.display =
+            "block";
+    }
 
     updateAI();
 }
@@ -878,13 +880,30 @@ function updateAI(){
 // =========================
 function drawChart(rate){
 
+    function drawChart(rate){
+
     const canvas =
         document.getElementById(
             "progressChart"
         );
 
+    if(!canvas){
+        return;
+    }
+
     const ctx =
         canvas.getContext("2d");
+
+    if(!ctx){
+        return;
+    }
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
 
     ctx.clearRect(
         0,
@@ -941,7 +960,7 @@ function drawChart(rate){
         125,
         135
     );
-}
+}}
 
 // =========================
 // カレンダー
@@ -1148,11 +1167,19 @@ document
 // =========================
 // 初期処理
 // =========================
-renderTasks();
+window.onload = () => {
 
-checkImport();
+    document
+        .getElementById(
+            "taskPage"
+        )
+        .style.display =
+        "block";
 
-updateAI();
+    renderTasks();
+    checkImport();
+    updateAI();
+};
 
 </script>
 
