@@ -1,207 +1,1187 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Task Manager (QR Sync Edition)</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-            min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
-        }
-        .container {
-            background: white; border-radius: 20px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            width: 100%; max-width: 480px; padding: 24px;
-        }
-        .header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 20px; border-bottom: 2px solid #f3f4f6; padding-bottom: 16px;
-        }
-        .header h1 { font-size: 22px; color: #111827; font-weight: 700; }
-        .badge { font-size: 11px; font-weight: bold; padding: 4px 10px; border-radius: 9999px; background-color: #ecfdf5; color: #059669; }
-        
-        /* 共有アクションエリア */
-        .action-box {
-            background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px;
-            padding: 12px; margin-bottom: 20px; display: flex; justify-content: center; gap: 10px;
-        }
-        .action-btn {
-            background: #4f46e5; color: white; border: none; padding: 8px 16px;
-            font-size: 13px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: background 0.2s;
-        }
-        .action-btn:hover { background: #4338ca; }
-        .action-btn.secondary { background: #4b5563; }
-        .action-btn.secondary:hover { background: #374151; }
-        
-        .input-group { display: flex; gap: 8px; margin-bottom: 20px; }
-        input[type="text"] {
-            flex: 1; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 15px; outline: none;
-        }
-        input[type="text"]:focus { border-color: #4f46e5; }
-        .add-btn { padding: 12px 20px; background: #4f46e5; color: white; border: none; border-radius: 10px; font-size: 15px; cursor: pointer; font-weight: bold; }
-        
-        .task-list { list-style: none; max-height: 350px; overflow-y: auto; }
-        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 14px 12px; border-bottom: 1px solid #f3f4f6; gap: 12px; }
-        .task-content { display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer; }
-        .task-content input[type="checkbox"] { width: 18px; height: 18px; accent-color: #4f46e5; }
-        .task-text { font-size: 15px; color: #374151; word-break: break-all; }
-        .task-text.completed { text-decoration: line-through; color: #9ca3af; }
-        .delete-btn { background: #ef4444; color: white; border: none; padding: 6px 12px; font-size: 13px; border-radius: 6px; cursor: pointer; }
-        .empty-state { text-align: center; color: #9ca3af; padding: 30px 0; font-size: 14px; }
-        
-        /* QRモーダル */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6);
-            display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
-        }
-        .modal-overlay.active { opacity: 1; pointer-events: auto; }
-        .modal-content { background: white; padding: 24px; border-radius: 16px; width: 90%; max-width: 340px; text-align: center; }
-        .modal-content h3 { font-size: 18px; margin-bottom: 10px; color: #111827; }
-        .modal-content p { font-size: 13px; color: #6b7280; margin-bottom: 16px; line-height: 1.4; }
-        .qrcode-container { display: flex; justify-content: center; margin: 15px 0; background: #fff; }
-        .close-modal-btn { margin-top: 15px; width: 100%; padding: 10px; background: #f3f4f6; color: #4b5563; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
-    </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1">
+
+<title>Campus Tasks 2.0</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,sans-serif;
+    background:
+    linear-gradient(
+        135deg,
+        #4f46e5,
+        #7c3aed
+    );
+    min-height:100vh;
+    padding:20px;
+}
+
+.container{
+    max-width:1000px;
+    margin:auto;
+    background:white;
+    border-radius:20px;
+    padding:25px;
+    box-shadow:
+    0 20px 40px
+    rgba(0,0,0,0.2);
+}
+
+h1{
+    margin-bottom:10px;
+}
+
+.subtitle{
+    color:#666;
+    margin-bottom:20px;
+}
+
+.nav{
+    margin-bottom:25px;
+}
+
+.nav button{
+    padding:10px 20px;
+    border:none;
+    border-radius:10px;
+    background:#4f46e5;
+    color:white;
+    cursor:pointer;
+    margin-right:10px;
+}
+
+.nav button:hover{
+    background:#4338ca;
+}
+
+.page{
+    display:none;
+}
+
+.page.active{
+    display:block;
+}
+
+.card{
+    background:#f8fafc;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:15px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:
+    repeat(
+        auto-fit,
+        minmax(250px,1fr)
+    );
+    gap:15px;
+}
+
+input,
+select{
+    padding:10px;
+    border:1px solid #ddd;
+    border-radius:8px;
+}
+
+button{
+    cursor:pointer;
+}
+
+.task{
+    border:1px solid #ddd;
+    border-radius:10px;
+    padding:15px;
+    margin-top:10px;
+}
+
+.badge{
+    background:#eef2ff;
+    color:#4f46e5;
+    padding:4px 10px;
+    border-radius:20px;
+    display:inline-block;
+}
+
+canvas{
+    border:1px solid #ddd;
+    border-radius:15px;
+}
+</style>
 </head>
+
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>Campus Tasks</h1>
-            <span class="badge">ローカル保存</span>
-        </div>
 
-        <div class="action-box">
-            <button class="action-btn" id="shareQrBtn">📱 スマホへ送る (QR)</button>
-            <button class="action-btn secondary" id="copyLinkBtn">🔗 リンクをコピー</button>
-        </div>
+<div class="container">
 
-        <div class="input-group">
-            <input type="text" id="taskInput" placeholder="新しいタスクを入力..." maxlength="100">
-            <button class="add-btn" id="addBtn">追加</button>
-        </div>
-        
-        <div id="emptyState" class="empty-state">タスクはありません。上のフォームから追加してください。</div>
-        <ul class="task-list" id="taskList"></ul>
+<h1>🎓 Campus Tasks 2.0</h1>
+<p class="subtitle">
+AI学習支援タスク管理システム
+</p>
+
+<div class="nav">
+<button onclick="showPage('taskPage')">
+📝 タスク管理
+</button>
+
+<button onclick="showPage('aiPage')">
+🤖 Campus AI
+</button>
+</div>
+<!-- ========================= -->
+<!-- タスク管理画面 -->
+<!-- ========================= -->
+<div id="taskPage" class="page active">
+
+    <h2>📝 タスク管理</h2>
+
+    <div class="card">
+
+        <input
+            type="text"
+            id="taskInput"
+            placeholder="課題名を入力">
+
+        <input
+            type="date"
+            id="deadlineInput">
+
+        <select id="priorityInput">
+            <option value="3">高</option>
+            <option value="2">中</option>
+            <option value="1">低</option>
+        </select>
+
+        <button id="addBtn">
+            ➕ 追加
+        </button>
+
     </div>
 
-    <div class="modal-overlay" id="qrModal">
-        <div class="modal-content">
-            <h3>スマホにタスクを送信</h3>
-            <p>標準カメラで下のQRコードをスキャンすると、このタスクリストをスマホに一発で引き継げます！</p>
-            <div class="qrcode-container" id="qrcode"></div>
-            <button class="close-modal-btn" id="closeModalBtn">閉じる</button>
+    <div class="card">
+        <h3>📋 タスクリスト</h3>
+
+        <div id="taskList">
+        </div>
+
+        <div
+            id="emptyState"
+            style="
+                color:#999;
+                margin-top:15px;
+            ">
+            タスクはありません。
         </div>
     </div>
 
-    <script>
-        // 日本語対応の安全なBase64変換関数
-        function utf8_to_b64(str) { return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode('0x' + p1))); }
-        function b64_to_utf8(str) { return decodeURIComponent(atob(str).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join('')); }
+</div>
 
-        const taskInput = document.getElementById('taskInput');
-        const addBtn = document.getElementById('addBtn');
-        const taskList = document.getElementById('taskList');
-        const emptyState = document.getElementById('emptyState');
-        const shareQrBtn = document.getElementById('shareQrBtn');
-        const copyLinkBtn = document.getElementById('copyLinkBtn');
-        const qrModal = document.getElementById('qrModal');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-        const qrcodeContainer = document.getElementById('qrcode');
-        
-        let tasks = [];
 
-        // URLパラメータからのインポートチェック
-        function checkUrlImport() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const importData = urlParams.get('import');
-            
-            if (importData) {
-                try {
-                    const jsonStr = b64_to_utf8(importData);
-                    const importedTasks = JSON.parse(jsonStr);
-                    if (importedTasks && importedTasks.length > 0) {
-                        if (confirm(`別の端末から ${importedTasks.length} 件のタスクが届きました。現在のリストに追加（統合）しますか？`)) {
-                            tasks = tasks.concat(importedTasks);
-                            saveTasks(); renderTasks();
-                            alert('タスクを正常に読み込みました！');
-                        }
+<!-- ========================= -->
+<!-- Campus AI画面 -->
+<!-- ========================= -->
+<div id="aiPage" class="page">
+
+    <h2>🤖 Campus AI Dashboard</h2>
+
+    <div class="grid">
+
+        <div class="card">
+            <h3>達成率</h3>
+            <h1 id="completionRate">
+                0%
+            </h1>
+        </div>
+
+        <div class="card">
+            <h3>学習スコア</h3>
+            <h1 id="learningScore">
+                0点
+            </h1>
+        </div>
+
+        <div class="card">
+            <h3>レベル</h3>
+            <h2 id="userLevel">
+                🌱 Beginner
+            </h2>
+        </div>
+
+        <div class="card">
+            <h3>週間予測</h3>
+            <div id="forecast">
+                データなし
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- 円グラフ -->
+    <div class="card">
+
+        <h3>
+            📈 達成率グラフ
+        </h3>
+
+        <canvas
+            id="progressChart"
+            width="250"
+            height="250">
+        </canvas>
+
+    </div>
+
+
+    <!-- 今日やるべき課題 -->
+    <div class="card">
+
+        <h3>
+            📌 今日やるべき課題
+        </h3>
+
+        <div id="todayTasks">
+            課題なし
+        </div>
+
+    </div>
+
+
+    <!-- AIアドバイス -->
+    <div class="card">
+
+        <h3>
+            🤖 AIアドバイス
+        </h3>
+
+        <div id="aiAdvice">
+            課題を追加してください。
+        </div>
+
+    </div>
+
+
+    <!-- 締切通知 -->
+    <div class="card">
+
+        <h3>
+            ⚠ 締切通知
+        </h3>
+
+        <div id="urgentTasks">
+            緊急の課題はありません。
+        </div>
+
+    </div>
+
+
+    <!-- カレンダー -->
+    <div class="card">
+
+        <h3>
+            📅 締切カレンダー
+        </h3>
+
+        <div id="calendar">
+            課題なし
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+// =========================
+// データ
+// =========================
+let tasks =
+JSON.parse(
+    localStorage.getItem(
+        "campus_tasks_2"
+    ) || "[]"
+);
+
+// =========================
+// 要素取得
+// =========================
+const taskInput =
+document.getElementById(
+    "taskInput"
+);
+
+const deadlineInput =
+document.getElementById(
+    "deadlineInput"
+);
+
+const priorityInput =
+document.getElementById(
+    "priorityInput"
+);
+
+const addBtn =
+document.getElementById(
+    "addBtn"
+);
+
+const taskList =
+document.getElementById(
+    "taskList"
+);
+
+const emptyState =
+document.getElementById(
+    "emptyState"
+);
+
+// =========================
+// 保存
+// =========================
+function saveTasks(){
+
+    localStorage.setItem(
+        "campus_tasks_2",
+        JSON.stringify(tasks)
+    );
+}
+
+// =========================
+// ページ切替
+// =========================
+function showPage(page){
+
+    document
+        .querySelectorAll(".page")
+        .forEach(p=>{
+            p.style.display = "none";
+        });
+
+    const target =
+        document.getElementById(
+            page
+        );
+
+    if(target){
+        target.style.display =
+            "block";
+    }
+
+    updateAI();
+}
+
+// =========================
+// タスク追加
+// =========================
+function addTask(){
+
+    const text =
+        taskInput.value.trim();
+
+    if(text === ""){
+
+        alert(
+            "課題名を入力してください"
+        );
+
+        return;
+    }
+
+    tasks.push({
+
+        text:text,
+
+        deadline:
+        deadlineInput.value,
+
+        priority:
+        Number(
+            priorityInput.value
+        ),
+
+        completed:false,
+
+        createdAt:
+        new Date()
+        .toISOString()
+
+    });
+
+    taskInput.value = "";
+    deadlineInput.value = "";
+
+    saveTasks();
+    renderTasks();
+}
+
+// =========================
+// タスク削除
+// =========================
+function deleteTask(index){
+
+    if(
+        !confirm(
+            "削除しますか？"
+        )
+    ){
+        return;
+    }
+
+    tasks.splice(index,1);
+
+    saveTasks();
+
+    renderTasks();
+}
+
+// =========================
+// 完了切替
+// =========================
+function toggleTask(index){
+
+    tasks[index]
+    .completed =
+    !tasks[index]
+    .completed;
+
+    saveTasks();
+
+    renderTasks();
+}
+
+// =========================
+// 優先度表示
+// =========================
+function priorityText(p){
+
+    if(p === 3)
+        return "高";
+
+    if(p === 2)
+        return "中";
+
+    return "低";
+}
+
+// =========================
+// タスク一覧表示
+// =========================
+function renderTasks(){
+
+    taskList.innerHTML = "";
+
+    emptyState.style.display =
+        tasks.length === 0
+        ? "block"
+        : "none";
+
+    tasks.forEach(
+        (task,index)=>{
+
+        taskList.innerHTML += `
+
+        <div class="task">
+
+            <div>
+
+                <input
+                    type="checkbox"
+                    ${
+                        task.completed
+                        ? "checked"
+                        : ""
                     }
-                } catch (e) {
-                    alert('データの読み込みに失敗しました。');
-                }
-                window.history.replaceState({}, '', window.location.pathname); // URLを綺麗にする
+                    onchange="
+                        toggleTask(
+                            ${index}
+                        )
+                    ">
+
+                <b>
+                    ${task.text}
+                </b>
+
+            </div>
+
+            <br>
+
+            📅 締切：
+            ${
+                task.deadline
+                || "未設定"
             }
+
+            <br><br>
+
+            優先度：
+
+            <span
+                class="badge">
+
+                ${
+                    priorityText(
+                        task.priority
+                    )
+                }
+
+            </span>
+
+            <br><br>
+
+            <button
+                onclick="
+                deleteTask(
+                    ${index}
+                )">
+
+                🗑 削除
+
+            </button>
+
+        </div>
+        `;
+    });
+
+    updateAI();
+}
+
+// =========================
+// イベント
+// =========================
+addBtn.addEventListener(
+    "click",
+    addTask
+);
+
+taskInput.addEventListener(
+    "keypress",
+    e=>{
+        if(
+            e.key ===
+            "Enter"
+        ){
+            addTask();
+        }
+    }
+);
+// =========================
+// AIスコア計算
+// =========================
+function getAIScore(task){
+
+    let score = 0;
+
+    // 優先度
+    score += task.priority * 20;
+
+    // 締切が近いほど加点
+    if(task.deadline){
+
+        const today =
+            new Date();
+
+        const deadline =
+            new Date(task.deadline);
+
+        const diff =
+            Math.ceil(
+                (deadline - today)
+                /(1000*60*60*24)
+            );
+
+        score +=
+            Math.max(
+                0,
+                30 - diff
+            );
+    }
+
+    return score;
+}
+
+// =========================
+// 達成率
+// =========================
+function getCompletionRate(){
+
+    if(tasks.length === 0){
+        return 0;
+    }
+
+    const completed =
+        tasks.filter(
+            t=>t.completed
+        ).length;
+
+    return Math.round(
+        completed /
+        tasks.length *
+        100
+    );
+}
+
+// =========================
+// レベル判定
+// =========================
+function getLevel(rate){
+
+    if(rate >= 90){
+        return "🏆 Master";
+    }
+
+    if(rate >= 70){
+        return "⭐ Advanced";
+    }
+
+    if(rate >= 40){
+        return "📘 Intermediate";
+    }
+
+    return "🌱 Beginner";
+}
+
+// =========================
+// AIおすすめ課題
+// =========================
+function getRecommendedTasks(){
+
+    return tasks
+        .filter(
+            t=>!t.completed
+        )
+        .sort(
+            (a,b)=>
+                getAIScore(b)
+                -
+                getAIScore(a)
+        );
+}
+
+// =========================
+// AIアドバイス
+// =========================
+function getAdvice(){
+
+    const recommend =
+        getRecommendedTasks();
+
+    if(
+        recommend.length === 0
+    ){
+        return `
+        すべての課題が
+        完了しています！
+        `;
+    }
+
+    const top =
+        recommend[0];
+
+    return `
+    「${top.text}」
+    を優先してください。
+    `;
+}
+
+// =========================
+// 締切通知
+// =========================
+function getUrgentTasks(){
+
+    return tasks.filter(
+        task=>{
+
+        if(
+            task.completed
+        ){
+            return false;
         }
 
-        function loadTasks() { tasks = JSON.parse(localStorage.getItem('standalone_tasks') || '[]'); }
-        function saveTasks() { localStorage.setItem('standalone_tasks', JSON.stringify(tasks)); }
-        function escapeHTML(text) { return text.replace(/[&<>\"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m])); }
-
-        function renderTasks() {
-            taskList.innerHTML = '';
-            emptyState.style.display = tasks.length === 0 ? 'block' : 'none';
-            tasks.forEach((task, index) => {
-                const li = document.createElement('li');
-                li.className = 'task-item';
-                li.innerHTML = `
-                    <div class="task-content" onclick="toggleTask(${index})">
-                        <input type="checkbox" ${task.completed ? 'checked' : ''}>
-                        <span class="task-text ${task.completed ? 'completed' : ''}">${escapeHTML(task.text)}</span>
-                    </div>
-                    <button class="delete-btn" onclick="deleteTask(${index})">削除</button>
-                `;
-                taskList.appendChild(li);
-            });
+        if(
+            !task.deadline
+        ){
+            return false;
         }
 
-        function addTask() {
-            const text = taskInput.value.trim();
-            if (!text) return;
-            tasks.push({ text: text, completed: false, createdAt: new Date().toISOString() });
-            taskInput.value = ''; renderTasks(); saveTasks();
+        const diff =
+            Math.ceil(
+                (
+                    new Date(
+                        task.deadline
+                    )
+                    -
+                    new Date()
+                )
+                /86400000
+            );
+
+        return diff <= 1;
+    });
+}
+
+// =========================
+// 学習スコア
+// =========================
+function getLearningScore(){
+
+    const rate =
+        getCompletionRate();
+
+    const completed =
+        tasks.filter(
+            t=>t.completed
+        ).length;
+
+    return Math.min(
+        100,
+        rate +
+        completed * 5
+    );
+}
+
+// =========================
+// 週間予測
+// =========================
+function getForecast(){
+
+    const remain =
+        tasks.filter(
+            t=>!t.completed
+        ).length;
+
+    if(remain === 0){
+        return `
+        すべて完了しています！
+        `;
+    }
+
+    const days =
+        Math.ceil(
+            remain / 2
+        );
+
+    return `
+    今のペースなら
+    約${days}日で
+    完了予定です。
+    `;
+}
+
+// =========================
+// AI更新
+// =========================
+function updateAI(){
+
+    const rate =
+        getCompletionRate();
+
+    document
+        .getElementById(
+            "completionRate"
+        )
+        .innerText =
+        rate + "%";
+
+    document
+        .getElementById(
+            "learningScore"
+        )
+        .innerText =
+        getLearningScore()
+        + "点";
+
+    document
+        .getElementById(
+            "userLevel"
+        )
+        .innerText =
+        getLevel(rate);
+
+    document
+        .getElementById(
+            "forecast"
+        )
+        .innerText =
+        getForecast();
+
+    // 今日やるべき課題
+    const recommend =
+        getRecommendedTasks();
+
+    document
+        .getElementById(
+            "todayTasks"
+        )
+        .innerHTML =
+        recommend.length
+        ?
+        recommend
+        .slice(0,3)
+        .map(
+            (t,i)=>
+            `
+            ${i+1}.
+            ${t.text}
+            `
+        )
+        .join("<br>")
+        :
+        "課題なし";
+
+    // AIアドバイス
+    document
+        .getElementById(
+            "aiAdvice"
+        )
+        .innerText =
+        getAdvice();
+
+    // 締切通知
+    const urgent =
+        getUrgentTasks();
+
+    document
+        .getElementById(
+            "urgentTasks"
+        )
+        .innerHTML =
+        urgent.length
+        ?
+        urgent
+        .map(
+            t=>
+            `
+            ⚠
+            ${t.text}
+            (${t.deadline})
+            `
+        )
+        .join("<br>")
+        :
+        "緊急の課題はありません";
+
+    drawChart(rate);
+
+    renderCalendar();
+}
+// =========================
+// 円グラフ
+// =========================
+function drawChart(rate){
+
+    function drawChart(rate){
+
+    const canvas =
+        document.getElementById(
+            "progressChart"
+        );
+
+    if(!canvas){
+        return;
+    }
+
+    const ctx =
+        canvas.getContext("2d");
+
+    if(!ctx){
+        return;
+    }
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    // 背景円
+    ctx.beginPath();
+    ctx.arc(
+        125,
+        125,
+        90,
+        0,
+        Math.PI * 2
+    );
+    ctx.lineWidth = 15;
+    ctx.strokeStyle = "#e5e7eb";
+    ctx.stroke();
+
+    // 達成率
+    ctx.beginPath();
+    ctx.arc(
+        125,
+        125,
+        90,
+        -Math.PI / 2,
+        (
+            rate / 100
+        ) *
+        Math.PI *
+        2 -
+        Math.PI / 2
+    );
+
+    ctx.strokeStyle =
+        "#4f46e5";
+
+    ctx.lineWidth = 15;
+    ctx.stroke();
+
+    ctx.fillStyle =
+        "#111827";
+
+    ctx.font =
+        "28px Arial";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.fillText(
+        rate + "%",
+        125,
+        135
+    );
+}}
+
+// =========================
+// カレンダー
+// =========================
+function renderCalendar(){
+
+    const calendar =
+        document.getElementById(
+            "calendar"
+        );
+
+    const data =
+        tasks
+        .filter(
+            t =>
+            !t.completed
+        )
+        .sort(
+            (a,b)=>
+                new Date(
+                    a.deadline ||
+                    "9999-12-31"
+                )
+                -
+                new Date(
+                    b.deadline ||
+                    "9999-12-31"
+                )
+        );
+
+    if(
+        data.length === 0
+    ){
+        calendar.innerHTML =
+            "課題なし";
+        return;
+    }
+
+    calendar.innerHTML =
+        data
+        .map(
+            t =>
+            `
+            📅
+            ${t.deadline || "未設定"}
+            <br>
+            ${t.text}
+            <br><br>
+            `
+        )
+        .join("");
+}
+
+// =========================
+// QR共有
+// =========================
+function utf8_to_b64(str){
+
+    return btoa(
+        encodeURIComponent(
+            str
+        ).replace(
+            /%([0-9A-F]{2})/g,
+            function(
+                match,
+                p1
+            ){
+                return String
+                .fromCharCode(
+                    "0x"+p1
+                );
+            }
+        )
+    );
+}
+
+function generateShareUrl(){
+
+    if(
+        tasks.length === 0
+    ){
+        alert(
+            "共有する課題がありません"
+        );
+        return;
+    }
+
+    const data =
+        utf8_to_b64(
+            JSON.stringify(
+                tasks
+            )
+        );
+
+    const url =
+        location.origin +
+        location.pathname +
+        "?import=" +
+        data;
+
+    return url;
+}
+
+function copyLink(){
+
+    const url =
+        generateShareUrl();
+
+    if(!url){
+        return;
+    }
+
+    navigator
+        .clipboard
+        .writeText(url);
+
+    alert(
+        "リンクをコピーしました！"
+    );
+}
+
+// =========================
+// URLから読み込み
+// =========================
+function checkImport(){
+
+    const params =
+        new URLSearchParams(
+            location.search
+        );
+
+    const data =
+        params.get(
+            "import"
+        );
+
+    if(
+        !data
+    ){
+        return;
+    }
+
+    try{
+
+        const json =
+            decodeURIComponent(
+                escape(
+                    atob(data)
+                )
+            );
+
+        const imported =
+            JSON.parse(
+                json
+            );
+
+        if(
+            confirm(
+                imported.length +
+                "件の課題を読み込みますか？"
+            )
+        ){
+
+            tasks =
+                tasks.concat(
+                    imported
+                );
+
+            saveTasks();
+
+            renderTasks();
         }
 
-        function toggleTask(index) { tasks[index].completed = !tasks[index].completed; saveTasks(); renderTasks(); }
-        function deleteTask(index) { tasks.splice(index, 1); saveTasks(); renderTasks(); }
+    }catch(e){
 
-        function generateShareUrl() {
-            if (tasks.length === 0) { alert('共有するタスクがありません。'); return null; }
-            
-            // 【変更箇所】ベースURLをGitHub Pagesの公開URLに完全固定！
-            const baseUrl = 'https://2570024.github.io/OChappyou/';
-            
-            return baseUrl + '?import=' + utf8_to_b64(JSON.stringify(tasks));
-        }
+        alert(
+            "読み込みに失敗しました"
+        );
+    }
+}
 
-        shareQrBtn.addEventListener('click', () => {
-            const shareUrl = generateShareUrl();
-            if (!shareUrl) return;
-            qrcodeContainer.innerHTML = '';
-            new QRCode(qrcodeContainer, { text: shareUrl, width: 200, height: 200, correctLevel : QRCode.CorrectLevel.L });
-            qrModal.classList.add('active');
-        });
+// =========================
+// 共有ボタン追加
+// =========================
+const shareBtn =
+document.createElement(
+    "button"
+);
 
-        copyLinkBtn.addEventListener('click', () => {
-            const shareUrl = generateShareUrl();
-            if (!shareUrl) return;
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                const oldText = copyLinkBtn.innerText; copyLinkBtn.innerText = "✅ コピー完了！";
-                setTimeout(() => copyLinkBtn.innerText = oldText, 2000);
-            });
-        });
+shareBtn.innerText =
+"📱 リンク共有";
 
-        closeModalBtn.addEventListener('click', () => qrModal.classList.remove('active'));
+shareBtn.onclick =
+copyLink;
 
-        // 【修正箇所】入力して追加するためのイベントリスナー
-        addBtn.addEventListener('click', addTask);
-        taskInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addTask();
-        });
+document
+.querySelector(
+    ".nav"
+)
+.appendChild(
+    shareBtn
+);
 
-        // 起動時の読み込みと描画
-        loadTasks(); renderTasks(); checkUrlImport();
-    </script>
+// =========================
+// 初期処理
+// =========================
+window.onload = () => {
+
+    document
+        .getElementById(
+            "taskPage"
+        )
+        .style.display =
+        "block";
+
+    renderTasks();
+    checkImport();
+    updateAI();
+};
+
+</script>
+
 </body>
 </html>
