@@ -143,7 +143,7 @@ AI学習支援タスク管理システム
 <!-- ========================= -->
 <!-- タスク管理画面 -->
 <!-- ========================= -->
-<div id="aiPage" class="page">
+<div id="taskPage" class="page active">
 
     <h2>📝 タスク管理</h2>
 
@@ -363,12 +363,10 @@ function saveTasks(){
 function showPage(page){
 
     document
-        .getElementById("taskPage")
-        .style.display = "none";
-
-    document
-        .getElementById("aiPage")
-        .style.display = "none";
+        .querySelectorAll(".page")
+        .forEach(p=>{
+            p.style.display = "none";
+        });
 
     document
         .getElementById(page)
@@ -1141,7 +1139,7 @@ document
 // =========================
 window.onload = function(){
 
-    showPage("taskPage");
+    document.getElementById("taskPage").style.display = "block";
 
     renderTasks();
     checkImport();
