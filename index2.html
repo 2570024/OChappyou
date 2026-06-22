@@ -363,20 +363,16 @@ function saveTasks(){
 function showPage(page){
 
     document
-        .querySelectorAll(".page")
-        .forEach(p=>{
-            p.style.display = "none";
-        });
+        .getElementById("taskPage")
+        .style.display = "none";
 
-    const target =
-        document.getElementById(
-            page
-        );
+    document
+        .getElementById("aiPage")
+        .style.display = "none";
 
-    if(target){
-        target.style.display =
-            "block";
-    }
+    document
+        .getElementById(page)
+        .style.display = "block";
 
     updateAI();
 }
