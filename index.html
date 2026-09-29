@@ -5,7 +5,7 @@
 <meta name="viewport"
       content="width=device-width,initial-scale=1">
 
-<title>Campus Tasks 2.0</title>
+<title>Campus Tasks 3.0</title>
 
 <style>
 *{
@@ -119,6 +119,21 @@ canvas{
     border:1px solid #ddd;
     border-radius:15px;
 }
+
+label{
+    font-size:14px;
+}
+
+#currentTime{
+    font-size:18px;
+    font-weight:bold;
+    margin-top:4px;
+}
+
+#aiStatus{
+    color:#4f46e5;
+    margin-top:4px;
+}
 </style>
 </head>
 
@@ -126,10 +141,14 @@ canvas{
 
 <div class="container">
 
-<h1>🎓 Campus Tasks 2.0</h1>
+<h1>🎓 Campus Tasks 3.0</h1>
 <p class="subtitle">
-AI学習支援タスク管理システム
+AI学習支援タスク管理システム（3.0）
 </p>
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap;">
+    <div><b>🕒 現在時刻</b><div id="currentTime">--</div></div>
+    <div><b>🤖 AI状態</b><div id="aiStatus">待機中</div></div>
+</div>
 
 <div class="nav">
 <button onclick="showPage('taskPage')">
@@ -154,9 +173,29 @@ AI学習支援タスク管理システム
             id="taskInput"
             placeholder="課題名を入力">
 
+        <label style="display:block;margin-bottom:6px;font-weight:bold;">📅 いつの何時まで？</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input
+                type="date"
+                id="deadlineDateInput">
+            <input
+                type="time"
+                id="deadlineTimeInput"
+                value="23:59">
+        </div>
+        <div id="deadlinePreview" style="margin-top:6px;color:#666;font-size:13px;">
+            締切日時：未設定
+        </div>
+
+        <label style="display:block;margin:10px 0 6px;font-weight:bold;">必要時間</label>
         <input
-            type="date"
-            id="deadlineInput">
+            type="number"
+            id="durationInput"
+            min="0"
+            step="15"
+            placeholder="例：60"
+            style="width:120px;">
+        <span style="margin-left:5px;">分（例：30 / 60 / 90）</span>
 
         <select id="priorityInput">
             <option value="3">高</option>
@@ -224,6 +263,16 @@ AI学習支援タスク管理システム
             <div id="forecast">
                 データなし
             </div>
+        </div>
+
+        <div class="card">
+            <h3>⏱ 時間負荷</h3>
+            <h2 id="timeLoad">0時間</h2><div style="color:#666;font-size:13px;">未完了タスクの設定時間合計</div>
+        </div>
+
+        <div class="card">
+            <h3>🧠 AI優先度</h3>
+            <div id="priorityReason">データなし</div>
         </div>
 
     </div>
@@ -321,9 +370,24 @@ document.getElementById(
     "taskInput"
 );
 
-const deadlineInput =
+const deadlineDateInput =
 document.getElementById(
-    "deadlineInput"
+    "deadlineDateInput"
+);
+
+const deadlineTimeInput =
+document.getElementById(
+    "deadlineTimeInput"
+);
+
+const deadlinePreview =
+document.getElementById(
+    "deadlinePreview"
+);
+
+const durationInput =
+document.getElementById(
+    "durationInput"
 );
 
 const priorityInput =
@@ -344,6 +408,62 @@ document.getElementById(
 const emptyState =
 document.getElementById(
     "emptyState"
+);
+
+// =========================
+// 3.0 初期時刻設定
+// =========================
+function setDeadlineMinimum(){
+
+    const now = new Date();
+
+    const localDate =
+        now.getFullYear() + "-" +
+        String(now.getMonth()+1).padStart(2,"0") + "-" +
+        String(now.getDate()).padStart(2,"0");
+
+    deadlineDateInput.min = localDate;
+
+    updateDeadlinePreview();
+}
+
+// =========================
+// 締切日時
+// =========================
+function getDeadlineValue(){
+
+    const date = deadlineDateInput.value;
+    const time = deadlineTimeInput.value;
+
+    if(!date){
+        return "";
+    }
+
+    return `${date}T${time || "23:59"}`;
+}
+
+function updateDeadlinePreview(){
+
+    const value = getDeadlineValue();
+
+    if(!value){
+        deadlinePreview.innerText =
+            "締切日時：未設定";
+        return;
+    }
+
+    deadlinePreview.innerText =
+        "締切日時：" + formatDateTime(value);
+}
+
+deadlineDateInput.addEventListener(
+    "change",
+    updateDeadlinePreview
+);
+
+deadlineTimeInput.addEventListener(
+    "change",
+    updateDeadlinePreview
 );
 
 // =========================
@@ -373,6 +493,7 @@ function showPage(page){
         .style.display = "block";
 
     updateAI();
+    updateClock();
 }
 
 // =========================
@@ -392,12 +513,31 @@ function addTask(){
         return;
     }
 
+    const deadlineValue = getDeadlineValue();
+
+    if(deadlineValue){
+        const deadlineDate = new Date(deadlineValue);
+
+        if(deadlineDate < new Date()){
+            alert(
+                "締切日時は現在より後に設定してください。"
+            );
+            return;
+        }
+    }
+
     tasks.push({
 
         text:text,
 
         deadline:
-        deadlineInput.value,
+        getDeadlineValue(),
+
+        duration:
+        Math.max(
+            0,
+            Number(durationInput.value) || 0
+        ),
 
         priority:
         Number(
@@ -413,7 +553,10 @@ function addTask(){
     });
 
     taskInput.value = "";
-    deadlineInput.value = "";
+    deadlineDateInput.value = "";
+    deadlineTimeInput.value = "23:59";
+    updateDeadlinePreview();
+    durationInput.value = "";
 
     saveTasks();
     renderTasks();
@@ -512,8 +655,21 @@ function renderTasks(){
 
             📅 締切：
             ${
-                task.deadline
-                || "未設定"
+                formatDateTime(task.deadline)
+            }
+
+            <br>
+
+            ⏱ 必要時間：
+            ${
+                task.duration
+                ? (
+                    task.duration >= 60
+                    ? Math.floor(task.duration / 60) + "時間" +
+                      (task.duration % 60 ? " " + (task.duration % 60) + "分" : "")
+                    : task.duration + "分"
+                  )
+                : "未設定"
             }
 
             <br><br>
@@ -576,32 +732,61 @@ function getAIScore(task){
 
     let score = 0;
 
-    // 優先度
+    // 基本優先度
     score += task.priority * 20;
 
-    // 締切が近いほど加点
-    if(task.deadline){
-
-        const today =
-            new Date();
-
-        const deadline =
-            new Date(task.deadline);
-
-        const diff =
-            Math.ceil(
-                (deadline - today)
-                /(1000*60*60*24)
-            );
-
-        score +=
-            Math.max(
-                0,
-                30 - diff
-            );
+    if(task.completed){
+        return -9999;
     }
 
-    return score;
+    // 締切日時を「現在時刻」から計算
+    if(task.deadline){
+
+        const now = new Date();
+        const deadline = new Date(task.deadline);
+        const diffMs = deadline - now;
+        const diffHours = diffMs / (1000 * 60 * 60);
+
+        // 締切超過は最優先
+        if(diffHours < 0){
+            score += 120;
+        }else if(diffHours <= 1){
+            score += 100;
+        }else if(diffHours <= 3){
+            score += 80;
+        }else if(diffHours <= 6){
+            score += 60;
+        }else if(diffHours <= 12){
+            score += 45;
+        }else if(diffHours <= 24){
+            score += 30;
+        }else{
+            // 遠い締切は徐々に加点
+            score += Math.max(0, 24 - diffHours / 24 * 4);
+        }
+    }
+
+    // 必要時間が長い課題は早めに着手できるよう少し加点
+    const duration = Number(task.duration) || 0;
+
+    if(duration >= 180){
+        score += 15;
+    }else if(duration >= 120){
+        score += 10;
+    }else if(duration >= 60){
+        score += 5;
+    }
+
+    // 作成から時間が経った未完了課題も少し優先
+    if(task.createdAt){
+        const ageHours =
+            (Date.now() - new Date(task.createdAt).getTime())
+            / (1000 * 60 * 60);
+
+        score += Math.min(15, Math.max(0, ageHours));
+    }
+
+    return Math.round(score);
 }
 
 // =========================
@@ -693,35 +878,22 @@ function getAdvice(){
 // =========================
 function getUrgentTasks(){
 
-    return tasks.filter(
-        task=>{
+    const now = new Date();
 
-        if(
-            task.completed
-        ){
+    return tasks.filter(task=>{
+
+        if(task.completed || !task.deadline){
             return false;
         }
 
-        if(
-            !task.deadline
-        ){
-            return false;
-        }
+        const diffHours =
+            (new Date(task.deadline) - now)
+            / (1000 * 60 * 60);
 
-        const diff =
-            Math.ceil(
-                (
-                    new Date(
-                        task.deadline
-                    )
-                    -
-                    new Date()
-                )
-                /86400000
-            );
-
-        return diff <= 1;
-    });
+        return diffHours <= 24;
+    }).sort(
+        (a,b)=>new Date(a.deadline)-new Date(b.deadline)
+    );
 }
 
 // =========================
@@ -749,27 +921,142 @@ function getLearningScore(){
 // =========================
 function getForecast(){
 
-    const remain =
-        tasks.filter(
-            t=>!t.completed
-        ).length;
+    const remain = tasks.filter(t=>!t.completed).length;
 
     if(remain === 0){
-        return `
-        すべて完了しています！
-        `;
+        return "すべて完了しています！";
     }
 
-    const days =
-        Math.ceil(
-            remain / 2
-        );
+    const dueTasks = tasks.filter(
+        t=>!t.completed && t.deadline
+    );
 
-    return `
-    今のペースなら
-    約${days}日で
-    完了予定です。
-    `;
+    if(dueTasks.length === 0){
+        return `未完了 ${remain}件。締切日時を設定するとAIが予測します。`;
+    }
+
+    const totalHours = dueTasks.reduce((sum, task)=>{
+        const hours =
+            (new Date(task.deadline)-new Date())
+            / (1000*60*60);
+        return sum + Math.max(0, hours);
+    }, 0);
+
+    const urgent = dueTasks.filter(task=>{
+        const h =
+            (new Date(task.deadline)-new Date())
+            / (1000*60*60);
+        return h <= 24;
+    }).length;
+
+    if(urgent > 0){
+        return `24時間以内の課題が${urgent}件あります。まず緊急課題から処理してください。`;
+    }
+
+    return `未完了${remain}件。最短締切まで約${Math.max(0, Math.round(
+        Math.min(...dueTasks.map(t =>
+            (new Date(t.deadline)-new Date())/(1000*60*60)
+        ))
+    ))}時間です。`;
+}
+
+// =========================
+// 3.0 時刻・AI補助
+// =========================
+function formatDateTime(value){
+
+    if(!value){
+        return "未設定";
+    }
+
+    const d = new Date(value);
+
+    if(Number.isNaN(d.getTime())){
+        return value;
+    }
+
+    return d.toLocaleString("ja-JP", {
+        year:"numeric",
+        month:"2-digit",
+        day:"2-digit",
+        hour:"2-digit",
+        minute:"2-digit"
+    });
+}
+
+function getTimeLoad(){
+
+    const remaining = tasks.filter(
+        t=>!t.completed
+    );
+
+    if(remaining.length === 0){
+        return 0;
+    }
+
+    const totalMinutes = remaining.reduce(
+        (sum, task)=>{
+            return sum + (Number(task.duration) || 0);
+        },
+        0
+    );
+
+    return Math.round(totalMinutes / 60 * 10) / 10;
+}
+
+function getPriorityReason(){
+
+    const recommend = getRecommendedTasks();
+
+    if(recommend.length === 0){
+        return "未完了の課題はありません。";
+    }
+
+    const top = recommend[0];
+
+    const durationText = Number(top.duration) > 0
+        ? `必要時間${top.duration}分`
+        : "必要時間未設定";
+
+    if(!top.deadline){
+        return `「${top.text}」：${durationText}・優先度 ${priorityText(top.priority)} を総合して上位です。`;
+    }
+
+    const hours =
+        (new Date(top.deadline)-new Date())/(1000*60*60);
+
+    if(hours < 0){
+        return `「${top.text}」：締切を過ぎています。最優先で確認してください。`;
+    }
+
+    if(hours <= 3){
+        return `「${top.text}」：締切まで約${Math.max(0,Math.round(hours*10)/10)}時間です。`;
+    }
+
+    if(hours <= 24){
+        return `「${top.text}」：24時間以内に締切です。`;
+    }
+
+    return `「${top.text}」：優先度と締切日時を総合してAIが上位に判定しています。`;
+}
+
+function updateClock(){
+
+    const now = new Date();
+
+    const el = document.getElementById("currentTime");
+
+    if(el){
+        el.innerText = now.toLocaleString("ja-JP", {
+            year:"numeric",
+            month:"2-digit",
+            day:"2-digit",
+            weekday:"short",
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+        });
+    }
 }
 
 // =========================
@@ -809,6 +1096,22 @@ function updateAI(){
         .innerText =
         getForecast();
 
+    const timeLoad = document.getElementById("timeLoad");
+    if(timeLoad){
+        timeLoad.innerText = getTimeLoad() + "時間";
+    }
+
+    const priorityReason = document.getElementById("priorityReason");
+    if(priorityReason){
+        priorityReason.innerText = getPriorityReason();
+    }
+
+    const aiStatus = document.getElementById("aiStatus");
+    if(aiStatus){
+        aiStatus.innerText =
+            `リアルタイム更新中 / ${new Date().toLocaleTimeString("ja-JP")}`;
+    }
+
     // 今日やるべき課題
     const recommend =
         getRecommendedTasks();
@@ -827,6 +1130,11 @@ function updateAI(){
             `
             ${i+1}.
             ${t.text}
+            ${
+                Number(t.duration) > 0
+                ? `（${t.duration}分）`
+                : ""
+            }
             `
         )
         .join("<br>")
@@ -977,7 +1285,7 @@ function renderCalendar(){
             t =>
             `
             📅
-            ${t.deadline || "未設定"}
+            ${formatDateTime(t.deadline)}
             <br>
             ${t.text}
             <br><br>
@@ -1141,9 +1449,17 @@ window.onload = function(){
 
     document.getElementById("taskPage").style.display = "block";
 
+    setDeadlineMinimum();
     renderTasks();
     checkImport();
     updateAI();
+    updateClock();
+
+    // 3.0: 現在時刻に合わせてAIを自動更新
+    setInterval(()=>{
+        updateClock();
+        updateAI();
+    }, 30000);
 };
 
 </script>
